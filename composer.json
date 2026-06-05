@@ -21,8 +21,7 @@
         "inventory"
     ],
     "require": {
-        "smile/elasticsuite": ">=2.8.0",
-        "smile/module-elasticsuite-rating": "^2.3"
+        "smile/elasticsuite": ">=2.8.0"
     },
     "autoload": {
         "files": [
