@@ -10,14 +10,21 @@ declare(strict_types=1);
 
 namespace Amadeco\ElasticsuiteStock\Model\Product\Indexer\Fulltext\Datasource;
 
+use Amadeco\ElasticsuiteStock\Api\Data\StockInterface;
 use Amadeco\ElasticsuiteStock\Helper\Config;
 use Magento\CatalogInventory\Model\Stock;
-use Psr\Log\LoggerInterface;
 use Smile\ElasticsuiteCore\Api\Index\DatasourceInterface;
-use Amadeco\ElasticsuiteStock\Plugin\Search\Request\Product\Attribute\AggregationResolver;
 
 /**
- * Stock Status Datasource
+ * Stock Status Datasource.
+ *
+ * Derives an indexed integer stock_status field from the stock data already
+ * present in the fulltext index payload.
+ *
+ * Stock Status ID
+ * -------------------------------------
+ * 0 => Out of Stock
+ * 1 => In Stock
  */
 class StockStatusData implements DatasourceInterface
 {
@@ -27,94 +34,51 @@ class StockStatusData implements DatasourceInterface
     private Config $config;
 
     /**
-     * @var LoggerInterface
-     */
-    private LoggerInterface $logger;
-
-    /**
-     * Constructor
+     * Constructor.
      *
-     * @param Config $config Configuration helper
-     * @param LoggerInterface $logger Logger
+     * @param Config $config Configuration helper.
      */
     public function __construct(
-        Config $config,
-        LoggerInterface $logger
+        Config $config
     ) {
         $this->config = $config;
-        $this->logger = $logger;
     }
 
     /**
-     * Add stock status data to the index data
+     * Add stock status data to the index data.
      *
-     * Stock Status ID
-     * -------------------------------------
-     * 0 => Out of Stock
-     * 1 => In Stock
+     * @param string|int $storeId   Store id.
+     * @param array      $indexData Index data.
      *
-     * @param string|int $storeId
-     * @param array $indexData
+     * @return array
      */
-    public function addData($storeId, array $indexData)
+    public function addData($storeId, array $indexData): array
     {
-        $isBackordersAllowed = $this->config->isBackordersAllowed((int)$storeId);
+        $isBackordersAllowed = $this->config->isBackordersAllowed((int) $storeId);
+        $attributeCode = StockInterface::ATTRIBUTE_CODE;
 
-        $attributeCode = AggregationResolver::STOCK_ATTRIBUTE;
-
-        /**
-        $stockStatusData = $this->resourceModel->loadStockStatusData((int)$storeId, array_keys($indexData));
-
-        array_walk($indexData, [$this, 'initStockStatusData']);
-
-        foreach ($stockStatusData as $stockDataRow) {
-            $productId = (int) $stockDataRow['entity_id'];
-            $indexData[$productId]['stock_status'] = (int) $stockDataRow['stock_status'];
-
-            if (!isset($indexData[$productId]['indexed_attributes'])) {
-                $indexData[$productId]['indexed_attributes'] = ['stock_status'];
-            } elseif (!in_array('stock_status', $indexData[$productId]['indexed_attributes'])) {
-                // Add stock_status only one time
-                $indexData[$productId]['indexed_attributes'][] = 'stock_status';
-            }
-        }
-        */
-
-        foreach ($indexData as $productId => &$productData) {
-            // Add stock_status to indexed_attributes if not already present
+        foreach ($indexData as &$productData) {
+            // Register stock_status as an indexed attribute (once).
             if (!isset($productData['indexed_attributes'])) {
                 $productData['indexed_attributes'] = [$attributeCode];
-            } elseif (!in_array($attributeCode, $productData['indexed_attributes'])) {
+            } elseif (!in_array($attributeCode, $productData['indexed_attributes'], true)) {
                 $productData['indexed_attributes'][] = $attributeCode;
             }
 
-            // Initialize stock_status with default value
+            // Default to out of stock, then refine from the stock payload when present.
             $productData[$attributeCode] = Stock::STOCK_OUT_OF_STOCK;
 
-            // If stock data is already available in the index, use it
-            if (isset($productData['stock']) && isset($productData['stock']['is_in_stock'])) {
-                $productData[$attributeCode] = (int)$productData['stock']['is_in_stock'];
+            if (isset($productData['stock']['is_in_stock'])) {
+                $productData[$attributeCode] = (int) $productData['stock']['is_in_stock'];
 
                 if ($isBackordersAllowed && isset($productData['stock']['qty'])) {
-                    $qty = (int)$productData['stock']['qty'];
-                    $productData[$attributeCode] = ($qty > 0.01) ? Stock::STOCK_IN_STOCK : Stock::STOCK_OUT_OF_STOCK;
+                    $qty = (float) $productData['stock']['qty'];
+                    $productData[$attributeCode] = ($qty > 0) ? Stock::STOCK_IN_STOCK : Stock::STOCK_OUT_OF_STOCK;
                 }
             }
         }
+        unset($productData);
 
         return $indexData;
-    }
-
-    /**
-     * Initialize stock status field
-     *
-     * @param array $productData Product index data
-     *
-     * @return void
-     * @SuppressWarnings(PHPMD.UnusedPrivateMethod) Used via callback
-     */
-    private function initStockStatusData(array &$productData): void
-    {
-        $productData['stock_status'] = Stock::STOCK_OUT_OF_STOCK;
     }
 }

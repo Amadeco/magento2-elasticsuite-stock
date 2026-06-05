@@ -20,7 +20,7 @@
         </arguments>
     </type>
 
-    <type name="\Smile\ElasticsuiteCatalog\Search\Request\Product\Attribute\AggregationResolver">
+    <type name="Smile\ElasticsuiteCatalog\Search\Request\Product\Attribute\AggregationResolver">
         <plugin name="stock_aggregation" type="Amadeco\ElasticsuiteStock\Plugin\Search\Request\Product\Attribute\AggregationResolver"/>
     </type>
 </config>

@@ -12,7 +12,7 @@ namespace Amadeco\ElasticsuiteStock\Block\Navigation\Renderer;
 
 use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Framework\View\Element\Template;
-use \Magento\Catalog\Helper\Data as CatalogHelper;
+use Magento\Catalog\Helper\Data as CatalogHelper;
 
 /**
  * Stock Filter renderer block
@@ -57,7 +57,8 @@ class Stock extends \Smile\ElasticsuiteCatalog\Block\Navigation\Renderer\Attribu
             'displayProductCount' => (bool) $this->displayProductCount(),
             'hasMoreItems'        => false,
             'displayRelNofollow'  => $this->getRelNofollowValue(),
-            'template'            => 'Amadeco_ElasticsuiteStock/stock-filter'
+            'template'            => 'Amadeco_ElasticsuiteStock/stock-filter',
+            'items'               => []
         ];
 
         foreach ($filterItems as $item) {

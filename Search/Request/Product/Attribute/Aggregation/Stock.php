@@ -20,34 +20,18 @@ use Smile\ElasticsuiteCatalog\Search\Request\Product\Attribute\AggregationInterf
 class Stock implements AggregationInterface
 {
     /**
-     * Get aggregation data
+     * Get aggregation data.
      *
-     * @param Attribute $attribute Attribute
+     * @param Attribute $attribute Attribute.
      *
      * @return array
      */
     public function getAggregationData(Attribute $attribute): array
     {
-        $bucketConfig = [
-            'name'        => $this->getFilterField($attribute),
+        return [
+            'name'        => $attribute->getAttributeCode(),
             'type'        => BucketInterface::TYPE_TERM,
             'minDocCount' => 0,
         ];
-
-        return $bucketConfig;
-    }
-
-    /**
-     * Retrieve ES filter field.
-     *
-     * @param \Magento\Catalog\Model\ResourceModel\Eav\Attribute $attribute Attribute
-     *
-     * @return string
-     */
-    private function getFilterField(\Magento\Catalog\Model\ResourceModel\Eav\Attribute $attribute)
-    {
-        $field = $attribute->getAttributeCode();
-
-        return $field;
     }
 }
