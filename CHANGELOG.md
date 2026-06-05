@@ -20,11 +20,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   updated to match.
 
 ### Changed
+- Moved the configuration helper to a plain model: `Helper\Config` → `Model\Config`. It no
+  longer extends `Magento\Framework\App\Helper\AbstractHelper` (the legacy pattern) and now
+  injects `ScopeConfigInterface` directly instead of pulling in the heavyweight helper
+  `Context`. This also drops the unused `CatalogInventory\Model\Configuration` object
+  dependency — only its `XML_PATH_BACKORDERS` class constant was ever used. The public API
+  (`shouldDisplayOutOfStockFilter()`, `getBackordersMode()`, `isBackordersAllowed()`) is
+  unchanged; the two consumers were updated to the new `use` statement.
 - Modernized to PHP 8.3 idioms with no behavioral change:
   - Constructor property promotion across the datasource, aggregation plugin, configuration
-    helper, navigation block, layered-navigation filter and the three setup data patches.
+    model, navigation block, layered-navigation filter and the three setup data patches.
   - Injected dependencies are now `readonly` (immutable after construction).
-  - Typed class constants on `Api\Data\StockInterface` and `Helper\Config`.
+  - Typed class constants on `Api\Data\StockInterface` and `Model\Config`.
 
 ### Performance
 - Removed the `Model\Layer\Filter\Stock::_initItems()` override. It called
