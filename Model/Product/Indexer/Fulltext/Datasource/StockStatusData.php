@@ -29,19 +29,13 @@ use Smile\ElasticsuiteCore\Api\Index\DatasourceInterface;
 class StockStatusData implements DatasourceInterface
 {
     /**
-     * @var Config
-     */
-    private Config $config;
-
-    /**
      * Constructor.
      *
      * @param Config $config Configuration helper.
      */
     public function __construct(
-        Config $config
+        private readonly Config $config
     ) {
-        $this->config = $config;
     }
 
     /**

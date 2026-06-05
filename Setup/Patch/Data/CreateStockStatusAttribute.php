@@ -21,21 +21,6 @@ use Amadeco\ElasticsuiteStock\Setup\StockSetup;
 class CreateStockStatusAttribute implements DataPatchInterface
 {
     /**
-     * @var ModuleDataSetupInterface
-     */
-    private ModuleDataSetupInterface $moduleDataSetup;
-
-    /**
-     * @var EavSetupFactory
-     */
-    private EavSetupFactory $eavSetupFactory;
-
-    /**
-     * @var StockSetup
-     */
-    private StockSetup $stockSetup;
-
-    /**
      * Constructor
      *
      * @param ModuleDataSetupInterface $moduleDataSetup Module data setup.
@@ -43,13 +28,10 @@ class CreateStockStatusAttribute implements DataPatchInterface
      * @param StockSetup               $stockSetup      Stock setup.
      */
     public function __construct(
-        ModuleDataSetupInterface $moduleDataSetup,
-        EavSetupFactory $eavSetupFactory,
-        StockSetup $stockSetup
+        private readonly ModuleDataSetupInterface $moduleDataSetup,
+        private readonly EavSetupFactory $eavSetupFactory,
+        private readonly StockSetup $stockSetup
     ) {
-        $this->moduleDataSetup = $moduleDataSetup;
-        $this->eavSetupFactory = $eavSetupFactory;
-        $this->stockSetup = $stockSetup;
     }
 
     /**

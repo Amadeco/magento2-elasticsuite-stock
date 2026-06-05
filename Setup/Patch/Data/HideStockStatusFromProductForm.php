@@ -29,27 +29,15 @@ use Magento\Framework\Setup\Patch\DataPatchInterface;
 class HideStockStatusFromProductForm implements DataPatchInterface
 {
     /**
-     * @var ModuleDataSetupInterface
-     */
-    private ModuleDataSetupInterface $moduleDataSetup;
-
-    /**
-     * @var EavSetupFactory
-     */
-    private EavSetupFactory $eavSetupFactory;
-
-    /**
      * Constructor.
      *
      * @param ModuleDataSetupInterface $moduleDataSetup Module data setup.
      * @param EavSetupFactory          $eavSetupFactory EAV setup factory.
      */
     public function __construct(
-        ModuleDataSetupInterface $moduleDataSetup,
-        EavSetupFactory $eavSetupFactory
+        private readonly ModuleDataSetupInterface $moduleDataSetup,
+        private readonly EavSetupFactory $eavSetupFactory
     ) {
-        $this->moduleDataSetup = $moduleDataSetup;
-        $this->eavSetupFactory = $eavSetupFactory;
     }
 
     /**

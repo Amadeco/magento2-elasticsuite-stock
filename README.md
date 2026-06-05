@@ -37,7 +37,7 @@ bin/magento indexer:reindex catalogsearch_fulltext
 
 - PHP 8.3+
 - Magento 2.4.x
-- Smile ElasticSuite 2.8 or higher
+- Smile ElasticSuite 2.12.0 or higher (introduces the layered-navigation filter `TypeProviderInterface`)
 
 ## Configuration
 
