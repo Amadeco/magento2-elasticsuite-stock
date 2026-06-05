@@ -96,27 +96,36 @@ Instead of relying on Magento's `quantity_and_stock_status` attribute (which has
 
 ## Compatibility with Other ElasticSuite Modules
 
-### Dependency on Smile_ElasticsuiteRating: Technical Explanation
+### Filter registration: TypeProvider pattern (no FilterList override)
 
-Smile_ElasticsuiteRating is a required dependency due to how Magento's preference system works:
+This module has **no dependency** on `Smile_ElasticsuiteRating` and does **not** override
+`Smile\ElasticsuiteCatalog\Model\Layer\FilterList`.
 
-Both modules (Rating and our Stock module) attempt to override Smile\ElasticsuiteCatalog\Model\Layer\FilterList using preferences.
-In Magento's preference system, when multiple modules declare a preference for the same class, only the last one loaded (based on module loading order) takes effect.
-If Smile_ElasticsuiteRating is installed but our module's preference isn't properly applied, our stock filter won't appear in the layered navigation.
-
-To solve this conflict, we must:
+The stock renderer is registered through the core ElasticSuite `filterTypeProviders` pool.
+`Smile\ElasticsuiteCatalog\Model\Layer\FilterList::getAttributeFilterClass()` iterates every
+injected `Smile\ElasticsuiteCatalog\Api\Layer\Filter\TypeProviderInterface` and lets it swap
+the filter class for its attribute. We provide one for `stock_status`:
 
 ```xml
-<preference for="Smile\ElasticsuiteCatalog\Model\Layer\FilterList" 
-            type="Amadeco\ElasticsuiteStock\Model\Layer\FilterList"/>
-            
-<preference for="Smile\ElasticsuiteRating\Model\Layer\FilterList" 
-            type="Amadeco\ElasticsuiteStock\Model\Layer\FilterList"/>
+<type name="Smile\ElasticsuiteCatalog\Model\Layer\FilterList">
+    <arguments>
+        <argument name="filterTypeProviders" xsi:type="array">
+            <item name="stock" xsi:type="object">Amadeco\ElasticsuiteStock\Model\Layer\Filter\TypeProvider\Stock</item>
+        </argument>
+    </arguments>
+</type>
 ```
 
-This approach requires Smile_ElasticsuiteRating to be present since we're explicitly overriding its class. Without it, Magento would throw a fatal error when trying to resolve this preference.
+Because the core `categoryFilterList` and `searchFilterList` virtual types extend that base
+type, they inherit the provider automatically — no preference, no virtual-type override, and
+no module load-order constraint against other filter modules.
 
-**Note:** We recognize that the current dependency on Smile_ElasticsuiteRating is not ideal. In a future release, we plan to implement a more flexible architecture.
+Earlier versions extended `FilterList` and added a second preference over
+`Smile\ElasticsuiteRating\Model\Layer\FilterList` to resolve a preference conflict. Both the
+rating module ([PR #19](https://github.com/Smile-SA/magento2-module-elasticsuite-rating/pull/19))
+and this module have since migrated to the `TypeProvider` pattern, so the conflict — and the
+dependency — no longer exist. Multiple filter modules now coexist cleanly because each only
+appends its own provider to the shared pool.
 
 ## License
 

@@ -11,25 +11,12 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
 
-    <!-- Base preference for Smile ElasticsuiteCatalog's FilterList -->
-    <preference for="Smile\ElasticsuiteCatalog\Model\Layer\FilterList" type="Amadeco\ElasticsuiteStock\Model\Layer\FilterList"/>
-
-    <!-- Virtual types for category and search filter lists -->
-    <virtualType name="categoryFilterList" type="Amadeco\ElasticsuiteStock\Model\Layer\FilterList">
+    <!-- Register the stock filter type provider on the core ElasticSuite FilterList. -->
+    <type name="Smile\ElasticsuiteCatalog\Model\Layer\FilterList">
         <arguments>
-            <argument name="filters" xsi:type="array">
-                <item name="stock" xsi:type="string">Amadeco\ElasticsuiteStock\Model\Layer\Filter\Stock</item>
+            <argument name="filterTypeProviders" xsi:type="array">
+                <item name="stock" xsi:type="object">Amadeco\ElasticsuiteStock\Model\Layer\Filter\TypeProvider\Stock</item>
             </argument>
         </arguments>
-    </virtualType>
-    <virtualType name="searchFilterList" type="Amadeco\ElasticsuiteStock\Model\Layer\FilterList">
-        <arguments>
-            <argument name="filters" xsi:type="array">
-                <item name="stock" xsi:type="string">Amadeco\ElasticsuiteStock\Model\Layer\Filter\Stock</item>
-            </argument>
-        </arguments>
-    </virtualType>
-
-    <!-- preference to overwritte virtual type of Smile_ElasticsuiteRating -->
-    <preference for="Smile\ElasticsuiteRating\Model\Layer\FilterList" type="Amadeco\ElasticsuiteStock\Model\Layer\FilterList"/>
+    </type>
 </config>
