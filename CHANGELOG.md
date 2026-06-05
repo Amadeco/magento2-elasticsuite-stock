@@ -23,6 +23,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   The attribute stays hidden from the product form (`input = hidden`, `is_visible = 0`); adding
   a source model only affects label resolution, not form visibility or ElasticSuite filtering.
 
+### Fixed
+- Decimal stock quantities were mis-indexed as out of stock. With backorders enabled, the qty
+  check cast the value to int before comparing (`(int) $qty > 0.01`), so any product with a
+  fractional quantity below 1 (e.g. `0.5` for items sold by weight/length with
+  `is_qty_decimal = 1`) was floored to `0` and indexed as Out of Stock. Now compared as a
+  float (`(float) $qty > 0`).
+
 ## [2.0.0] - 2026-06-05
 
 ### Changed (Breaking)
