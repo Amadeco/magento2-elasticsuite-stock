@@ -43,14 +43,21 @@ class Stock extends \Smile\ElasticsuiteCatalog\Block\Navigation\Renderer\Attribu
      */
     public function getJsLayout(): string
     {
-        $filterItems = $this->getFilter()->getItems();
+        $filter = $this->getFilter();
+        $filterItems = $filter->getItems();
+
+        // Inlined on purpose: the parent Smile renderer declares getRelNofollowValue()
+        // as private, so this overridden getJsLayout() cannot delegate to it.
+        $displayRelNofollow = $filter->getAttributeModel()->getIsDisplayRelNofollow()
+            ? self::REL_NOFOLLOW
+            : '';
 
         $jsLayoutConfig = [
             'component'           => self::JS_COMPONENT,
             'maxSize'             => count($filterItems),
             'displayProductCount' => (bool) $this->displayProductCount(),
             'hasMoreItems'        => false,
-            'displayRelNofollow'  => $this->getRelNofollowValue(),
+            'displayRelNofollow'  => $displayRelNofollow,
             'template'            => 'Amadeco_ElasticsuiteStock/stock-filter',
             'items'               => []
         ];

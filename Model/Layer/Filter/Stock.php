@@ -22,7 +22,7 @@ use Smile\ElasticsuiteCatalog\Api\LayeredNavAttributeInterface;
 use Smile\ElasticsuiteCatalog\Helper\ProductAttribute;
 use Smile\ElasticsuiteCatalog\Model\Attribute\LayeredNavAttributesProvider;
 use Smile\ElasticsuiteCatalog\Model\Attribute\Source\FilterDisplayMode;
-use Amadeco\ElasticsuiteStock\Helper\Config;
+use Amadeco\ElasticsuiteStock\Model\Config;
 
 /**
  * Products Stock Filter Model
@@ -47,7 +47,7 @@ class Stock extends \Smile\ElasticsuiteCatalog\Model\Layer\Filter\Boolean
      * @param Escaper                      $escaper                      Html Escaper.
      * @param ProductAttribute             $mappingHelper                Mapping helper.
      * @param LayeredNavAttributesProvider $layeredNavAttributesProvider Layered navigation attributes Provider.
-     * @param Config                       $config                       Stock configuration helper.
+     * @param Config                       $config                       Stock configuration model.
      * @param array                        $hideNoValueAttributes        Attributes hiding the no-value option.
      * @param array                        $data                         Custom data.
      */

@@ -11,7 +11,7 @@ declare(strict_types=1);
 namespace Amadeco\ElasticsuiteStock\Model\Product\Indexer\Fulltext\Datasource;
 
 use Amadeco\ElasticsuiteStock\Api\Data\StockInterface;
-use Amadeco\ElasticsuiteStock\Helper\Config;
+use Amadeco\ElasticsuiteStock\Model\Config;
 use Magento\CatalogInventory\Model\Stock;
 use Smile\ElasticsuiteCore\Api\Index\DatasourceInterface;
 
@@ -31,7 +31,7 @@ class StockStatusData implements DatasourceInterface
     /**
      * Constructor.
      *
-     * @param Config $config Configuration helper.
+     * @param Config $config Configuration model.
      */
     public function __construct(
         private readonly Config $config
