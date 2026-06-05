@@ -23,23 +23,18 @@ class Config extends AbstractHelper
     /**
      * Configuration paths
      */
-    public const XML_PATH_DISPLAY_OUT_OF_STOCK = 'amadeco_elasticsuite_stock/general/display_out_of_stock_filter';
+    public const string XML_PATH_DISPLAY_OUT_OF_STOCK
+        = 'amadeco_elasticsuite_stock/general/display_out_of_stock_filter';
 
     /**
-     * @var InventoryConfig
-     */
-    private InventoryConfig $inventoryConfig;
-
-    /**
-     * @param Context $context
-     * @param InventoryConfig $inventoryConfig
+     * @param Context         $context         Helper context.
+     * @param InventoryConfig $inventoryConfig Catalog inventory configuration.
      */
     public function __construct(
         Context $context,
-        InventoryConfig $inventoryConfig
+        private readonly InventoryConfig $inventoryConfig
     ) {
         parent::__construct($context);
-        $this->inventoryConfig = $inventoryConfig;
     }
 
     /**

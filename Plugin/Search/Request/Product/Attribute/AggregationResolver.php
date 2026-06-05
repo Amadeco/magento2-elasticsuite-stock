@@ -21,19 +21,13 @@ use Amadeco\ElasticsuiteStock\Search\Request\Product\Attribute\Aggregation\Stock
 class AggregationResolver
 {
     /**
-     * @var StockAggregation
-     */
-    private StockAggregation $stockAggregation;
-
-    /**
      * AggregationResolver constructor.
      *
      * @param StockAggregation $stockAggregation Stock aggregation builder.
      */
     public function __construct(
-        StockAggregation $stockAggregation
+        private readonly StockAggregation $stockAggregation
     ) {
-        $this->stockAggregation = $stockAggregation;
     }
 
     /**

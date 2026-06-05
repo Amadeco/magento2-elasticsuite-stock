@@ -22,7 +22,6 @@ use Smile\ElasticsuiteCatalog\Api\LayeredNavAttributeInterface;
 use Smile\ElasticsuiteCatalog\Helper\ProductAttribute;
 use Smile\ElasticsuiteCatalog\Model\Attribute\LayeredNavAttributesProvider;
 use Smile\ElasticsuiteCatalog\Model\Attribute\Source\FilterDisplayMode;
-use Smile\ElasticsuiteCore\Search\Request\BucketInterface;
 use Amadeco\ElasticsuiteStock\Helper\Config;
 
 /**
@@ -34,11 +33,6 @@ class Stock extends \Smile\ElasticsuiteCatalog\Model\Layer\Filter\Boolean
      * @var StripTags
      */
     private StripTags $tagFilter;
-
-    /**
-     * @var Config
-     */
-    private Config $config;
 
     /**
      * Constructor.
@@ -66,7 +60,7 @@ class Stock extends \Smile\ElasticsuiteCatalog\Model\Layer\Filter\Boolean
         Escaper $escaper,
         ProductAttribute $mappingHelper,
         LayeredNavAttributesProvider $layeredNavAttributesProvider,
-        Config $config,
+        private readonly Config $config,
         array $hideNoValueAttributes = [],
         array $data = []
     ) {
@@ -84,7 +78,6 @@ class Stock extends \Smile\ElasticsuiteCatalog\Model\Layer\Filter\Boolean
         );
 
         $this->tagFilter = $tagFilter;
-        $this->config = $config;
     }
 
     /**
@@ -126,7 +119,14 @@ class Stock extends \Smile\ElasticsuiteCatalog\Model\Layer\Filter\Boolean
     }
 
     /**
-     * Get data array for building filter items
+     * Get data array for building filter items.
+     *
+     * Each item keeps the raw faceted value (0/1) as its label on purpose: the inherited
+     * Smile Boolean::_initItems() then resolves that numeric label to the source-model text
+     * ("In Stock" / "Out of Stock") and matches the active selection on it. Because the stock
+     * values equal Magento's Boolean source values (VALUE_YES = STOCK_IN_STOCK = 1,
+     * VALUE_NO = STOCK_OUT_OF_STOCK = 0), the parent handles labelling, selection and manual
+     * sort with no _initItems() override on this class.
      *
      * @return array
      * @SuppressWarnings(PHPMD.CamelCaseMethodName)
@@ -146,7 +146,7 @@ class Stock extends \Smile\ElasticsuiteCatalog\Model\Layer\Filter\Boolean
         if (!empty($this->currentFilterValue) || $minCount < $productCollection->getSize() || $forceDisplay) {
             foreach ($optionsFacetedData as $value => $data) {
                 $items[$value] = [
-                    'label' => $this->getLabel($value),
+                    'label' => $this->tagFilter->filter((string) $value),
                     'value' => $value,
                     'count' => $data['count'],
                 ];
@@ -158,51 +158,6 @@ class Stock extends \Smile\ElasticsuiteCatalog\Model\Layer\Filter\Boolean
         }
 
         return $items;
-    }
-
-    /**
-     * Initialize filter items, applying selection state and stock-status sort order.
-     *
-     * @return $this
-     *
-     * @SuppressWarnings(PHPMD.CamelCaseMethodName)
-     * @SuppressWarnings(PHPMD.ElseExpression)
-     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-     */
-    protected function _initItems()
-    {
-        parent::_initItems();
-
-        foreach ($this->_items as $key => $item) {
-            $applyValue = $item->getValue();
-
-            if ($item->getValue() == MagentoModelStock::STOCK_IN_STOCK
-                || $item->getValue() == MagentoModelStock::STOCK_OUT_OF_STOCK
-            ) {
-                if (is_numeric($item->getLabel())) {
-                    $label = $this->getLabel((int) $item->getLabel());
-                    $item->setLabel((string) $label);
-                }
-            }
-
-            if (($valuePos = array_search($applyValue, $this->currentFilterValue)) !== false) {
-                $item->setIsSelected(true);
-                $applyValue = $this->currentFilterValue;
-                unset($applyValue[$valuePos]);
-            } else {
-                $applyValue = array_merge($this->currentFilterValue, [$applyValue]);
-            }
-
-            $item->setApplyFilterValue(array_values($applyValue));
-        }
-
-        if (($this->getAttributeModel()->getFacetSortOrder() == BucketInterface::SORT_ORDER_MANUAL)
-            && (count($this->_items) > 1)
-        ) {
-            krsort($this->_items, SORT_NUMERIC);
-        }
-
-        return $this;
     }
 
     /**

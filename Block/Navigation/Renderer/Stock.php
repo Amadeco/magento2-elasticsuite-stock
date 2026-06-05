@@ -20,26 +20,20 @@ use Magento\Catalog\Helper\Data as CatalogHelper;
 class Stock extends \Smile\ElasticsuiteCatalog\Block\Navigation\Renderer\Attribute
 {
     /**
-     * @var Json
-     */
-    private Json $serializer;
-
-    /**
      * Constructor
      *
-     * @param Template\Context $context Block context.
-     * @param CatalogHelper $catalogHelper Catalog helper.
-     * @param Json $serializer JSON Serializer
-     * @param array $data Block data
+     * @param Template\Context $context       Block context.
+     * @param CatalogHelper    $catalogHelper Catalog helper.
+     * @param Json             $serializer    JSON Serializer.
+     * @param array            $data          Block data.
      */
     public function __construct(
         Template\Context $context,
         CatalogHelper $catalogHelper,
-        Json $serializer,
+        private readonly Json $serializer,
         array $data = []
     ) {
         parent::__construct($context, $catalogHelper, $data);
-        $this->serializer = $serializer;
     }
 
     /**

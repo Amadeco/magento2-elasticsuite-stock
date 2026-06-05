@@ -22,5 +22,5 @@ interface StockInterface
     /**
      * Indexed stock status attribute code.
      */
-    public const ATTRIBUTE_CODE = 'stock_status';
+    public const string ATTRIBUTE_CODE = 'stock_status';
 }

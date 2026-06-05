@@ -5,6 +5,37 @@ All notable changes to the `Amadeco_ElasticsuiteStock` module are documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-06-05
+
+### Changed (Breaking)
+- Minimum PHP raised to **8.3** (`composer.json` now requires `~8.3.0 || ~8.4.0`). The module
+  uses typed class constants (`public const string ATTRIBUTE_CODE`), which are an 8.3-only
+  syntax. Installs on PHP 8.1 / 8.2 must stay on `2.1.x`.
+
+### Fixed
+- Corrected the `smile/elasticsuite` version constraint from `>=2.8.0` to `>=2.12.0`. The
+  filter is registered through the `TypeProviderInterface` / `filterTypeProviders` pool, which
+  ElasticSuite only introduced in **2.12.0**. The old constraint allowed installing 2.8–2.11,
+  where that API does not exist, leading to a fatal error on the storefront. README requirement
+  updated to match.
+
+### Changed
+- Modernized to PHP 8.3 idioms with no behavioral change:
+  - Constructor property promotion across the datasource, aggregation plugin, configuration
+    helper, navigation block, layered-navigation filter and the three setup data patches.
+  - Injected dependencies are now `readonly` (immutable after construction).
+  - Typed class constants on `Api\Data\StockInterface` and `Helper\Config`.
+
+### Performance
+- Removed the `Model\Layer\Filter\Stock::_initItems()` override. It called
+  `parent::_initItems()` and then re-ran the same per-item loop a third time (relabel,
+  apply-value, `krsort`), discarding and recomputing the work the parent had just done. The
+  override only existed to compensate for `_getItemsData()` storing the display text as the
+  item label; that now stores the raw faceted value (0/1) like core ElasticSuite, so the
+  inherited `Smile\…\Boolean::_initItems()` resolves the label via the source model and matches
+  the selection on the value with no extra pass. Net effect: one fewer full item loop and one
+  fewer `krsort` per filter render, plus ~40 lines and three `SuppressWarnings` removed.
+
 ## [2.1.0] - 2026-06-05
 
 ### Added
@@ -22,13 +53,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   hardcoding the "In Stock" / "Out of Stock" strings (DRY: the labels now live in one place).
   The attribute stays hidden from the product form (`input = hidden`, `is_visible = 0`); adding
   a source model only affects label resolution, not form visibility or ElasticSuite filtering.
-
-### Fixed
-- Decimal stock quantities were mis-indexed as out of stock. With backorders enabled, the qty
-  check cast the value to int before comparing (`(int) $qty > 0.01`), so any product with a
-  fractional quantity below 1 (e.g. `0.5` for items sold by weight/length with
-  `is_qty_decimal = 1`) was floored to `0` and indexed as Out of Stock. Now compared as a
-  float (`(float) $qty > 0`).
 
 ## [2.0.0] - 2026-06-05
 
@@ -55,6 +79,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `is_visible = 0` on existing installs (the original create patch does not re-run).
 
 ### Fixed
+- Decimal stock quantities were mis-indexed as out of stock. With backorders enabled, the qty
+  check cast the value to int before comparing (`(int) $qty > 0.01`), so any product with a
+  fractional quantity below 1 (e.g. `0.5` for items sold by weight/length with
+  `is_qty_decimal = 1`) was floored to `0` and indexed as Out of Stock. Now compared as a
+  float (`(float) $qty > 0`).
 - "Display Out Of Stock Filter" admin setting was inverted: enabling it hid the Out-of-Stock
   option instead of showing it. The condition is now correct.
 - `StockSetup` no longer swallows exceptions while creating the attribute; a failed
@@ -70,7 +99,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Internal
 - Strict type declarations and return types added across datasource, aggregation and setup.
-- Fractional stock quantity comparison fixed (`(float) $qty > 0` instead of `(int) $qty > 0.01`).
 - PSR-12 / Magento2 coding-standard cleanups: private method renamed off the `_` prefix,
   leading backslashes removed from `di.xml` type name and `use` statements, docblocks aligned.
 - README requirements corrected (the `Smile ElasticSuite Rating` requirement was stale).
