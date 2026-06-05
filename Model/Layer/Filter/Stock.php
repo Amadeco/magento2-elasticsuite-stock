@@ -53,8 +53,9 @@ class Stock extends \Smile\ElasticsuiteCatalog\Model\Layer\Filter\Boolean
      * @param Escaper                      $escaper                      Html Escaper.
      * @param ProductAttribute             $mappingHelper                Mapping helper.
      * @param LayeredNavAttributesProvider $layeredNavAttributesProvider Layered navigation attributes Provider.
-     * @param Config                       $config                       Stock configuration helper
-     * @param array                        $data                         Custom data
+     * @param Config                       $config                       Stock configuration helper.
+     * @param array                        $hideNoValueAttributes        Attributes hiding the no-value option.
+     * @param array                        $data                         Custom data.
      */
     public function __construct(
         ItemFactory $filterItemFactory,
@@ -113,7 +114,7 @@ class Stock extends \Smile\ElasticsuiteCatalog\Model\Layer\Filter\Boolean
 
             foreach ($this->currentFilterValue as $currentFilter) {
                 $filter = $this->_createItem(
-                    $this->_getLabel((int) $currentFilter),
+                    $this->getLabel((int) $currentFilter),
                     $this->currentFilterValue
                 );
                 $filter->setRawValue($currentFilter);
@@ -145,14 +146,14 @@ class Stock extends \Smile\ElasticsuiteCatalog\Model\Layer\Filter\Boolean
         if (!empty($this->currentFilterValue) || $minCount < $productCollection->getSize() || $forceDisplay) {
             foreach ($optionsFacetedData as $value => $data) {
                 $items[$value] = [
-                    'label' => $this->_getLabel($value),
+                    'label' => $this->getLabel($value),
                     'value' => $value,
                     'count' => $data['count'],
                 ];
             }
         }
 
-        if ($this->config->shouldDisplayOutOfStockFilter()) {
+        if (!$this->config->shouldDisplayOutOfStockFilter()) {
             unset($items[MagentoModelStock::STOCK_OUT_OF_STOCK]);
         }
 
@@ -160,11 +161,13 @@ class Stock extends \Smile\ElasticsuiteCatalog\Model\Layer\Filter\Boolean
     }
 
     /**
+     * Initialize filter items, applying selection state and stock-status sort order.
+     *
+     * @return $this
+     *
      * @SuppressWarnings(PHPMD.CamelCaseMethodName)
      * @SuppressWarnings(PHPMD.ElseExpression)
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-     *
-     * {@inheritDoc}
      */
     protected function _initItems()
     {
@@ -177,7 +180,7 @@ class Stock extends \Smile\ElasticsuiteCatalog\Model\Layer\Filter\Boolean
                 || $item->getValue() == MagentoModelStock::STOCK_OUT_OF_STOCK
             ) {
                 if (is_numeric($item->getLabel())) {
-                    $label = $this->_getLabel((int) $item->getLabel());
+                    $label = $this->getLabel((int) $item->getLabel());
                     $item->setLabel((string) $label);
                 }
             }
@@ -205,7 +208,7 @@ class Stock extends \Smile\ElasticsuiteCatalog\Model\Layer\Filter\Boolean
     /**
      * Get filter value.
      *
-     * @param mixed $value Filter value.
+     * @param array $value Filter value.
      *
      * @return mixed
      */
@@ -222,15 +225,18 @@ class Stock extends \Smile\ElasticsuiteCatalog\Model\Layer\Filter\Boolean
     }
 
     /**
-     * Get filter label from the current value
+     * Get filter label from the given stock status value.
+     *
+     * Delegates to the attribute source model so the labels live in a single
+     * place (Model\Product\Attribute\Source\Stock) instead of being hardcoded.
+     *
+     * @param int $value Stock status value.
      *
      * @return string
      */
-    private function _getLabel(int $value): string
+    private function getLabel(int $value): string
     {
-        $label = $value === (int)MagentoModelStock::STOCK_IN_STOCK ?
-            __('In Stock') :
-            __('Out of Stock');
+        $label = (string) $this->getAttributeModel()->getSource()->getOptionText($value);
 
         return $this->tagFilter->filter($label);
     }

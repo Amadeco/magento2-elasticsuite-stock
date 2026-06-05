@@ -10,15 +10,23 @@ declare(strict_types=1);
 
 namespace Amadeco\ElasticsuiteStock\Setup\Patch\Data;
 
-use Magento\Framework\Setup\Patch\DataPatchInterface;
-use Magento\Framework\Setup\ModuleDataSetupInterface;
+use Amadeco\ElasticsuiteStock\Api\Data\StockInterface;
+use Magento\Catalog\Api\Data\ProductAttributeInterface;
+use Magento\Eav\Setup\EavSetup;
 use Magento\Eav\Setup\EavSetupFactory;
-use Amadeco\ElasticsuiteStock\Setup\StockSetup;
+use Magento\Framework\Setup\ModuleDataSetupInterface;
+use Magento\Framework\Setup\Patch\DataPatchInterface;
 
 /**
- * Patch to create stock_status attribute
+ * Hide the system-managed stock_status attribute from the product edit form.
+ *
+ * Existing installs created the attribute with is_visible=1 (matching the original
+ * CreateStockStatusAttribute patch, which does not re-run). In the UI-component product
+ * form, frontend_input "hidden" maps to a visible "input" element, so the field appeared
+ * as an editable text box. Setting is_visible=0 removes it from the form without affecting
+ * ElasticSuite layered navigation, which filters on is_filterable.
  */
-class CreateStockStatusAttribute implements DataPatchInterface
+class HideStockStatusFromProductForm implements DataPatchInterface
 {
     /**
      * @var ModuleDataSetupInterface
@@ -31,29 +39,21 @@ class CreateStockStatusAttribute implements DataPatchInterface
     private EavSetupFactory $eavSetupFactory;
 
     /**
-     * @var StockSetup
-     */
-    private StockSetup $stockSetup;
-
-    /**
-     * Constructor
+     * Constructor.
      *
      * @param ModuleDataSetupInterface $moduleDataSetup Module data setup.
      * @param EavSetupFactory          $eavSetupFactory EAV setup factory.
-     * @param StockSetup               $stockSetup      Stock setup.
      */
     public function __construct(
         ModuleDataSetupInterface $moduleDataSetup,
-        EavSetupFactory $eavSetupFactory,
-        StockSetup $stockSetup
+        EavSetupFactory $eavSetupFactory
     ) {
         $this->moduleDataSetup = $moduleDataSetup;
         $this->eavSetupFactory = $eavSetupFactory;
-        $this->stockSetup = $stockSetup;
     }
 
     /**
-     * Apply patch
+     * Apply patch.
      *
      * @return void
      */
@@ -61,14 +61,19 @@ class CreateStockStatusAttribute implements DataPatchInterface
     {
         $this->moduleDataSetup->startSetup();
 
+        /** @var EavSetup $eavSetup */
         $eavSetup = $this->eavSetupFactory->create(['setup' => $this->moduleDataSetup]);
-        $this->stockSetup->createStockStatusAttribute($eavSetup);
+        $entity = ProductAttributeInterface::ENTITY_TYPE_CODE;
+
+        if ($eavSetup->getAttributeId($entity, StockInterface::ATTRIBUTE_CODE) !== false) {
+            $eavSetup->updateAttribute($entity, StockInterface::ATTRIBUTE_CODE, 'is_visible', 0);
+        }
 
         $this->moduleDataSetup->endSetup();
     }
 
     /**
-     * Get aliases
+     * Get aliases.
      *
      * @return array
      */
@@ -78,12 +83,14 @@ class CreateStockStatusAttribute implements DataPatchInterface
     }
 
     /**
-     * Get dependencies
+     * Get dependencies.
      *
      * @return array
      */
     public static function getDependencies(): array
     {
-        return [];
+        return [
+            CreateStockStatusAttribute::class
+        ];
     }
 }

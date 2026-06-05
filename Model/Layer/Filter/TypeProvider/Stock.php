@@ -10,8 +10,8 @@ declare(strict_types=1);
 
 namespace Amadeco\ElasticsuiteStock\Model\Layer\Filter\TypeProvider;
 
+use Amadeco\ElasticsuiteStock\Api\Data\StockInterface;
 use Amadeco\ElasticsuiteStock\Model\Layer\Filter\Stock as StockFilter;
-use Amadeco\ElasticsuiteStock\Plugin\Search\Request\Product\Attribute\AggregationResolver;
 use Magento\Catalog\Model\ResourceModel\Eav\Attribute;
 use Smile\ElasticsuiteCatalog\Api\Layer\Filter\TypeProviderInterface;
 
@@ -25,11 +25,16 @@ use Smile\ElasticsuiteCatalog\Api\Layer\Filter\TypeProviderInterface;
 class Stock implements TypeProviderInterface
 {
     /**
-     * {@inheritDoc}
+     * Return the stock filter class for the stock_status attribute, default otherwise.
+     *
+     * @param Attribute $attribute               The attribute model.
+     * @param string    $originalFilterClassName The original/default filter class name.
+     *
+     * @return string
      */
     public function getFilterClassName(Attribute $attribute, string $originalFilterClassName): string
     {
-        if ($attribute->getAttributeCode() === AggregationResolver::STOCK_ATTRIBUTE) {
+        if ($attribute->getAttributeCode() === StockInterface::ATTRIBUTE_CODE) {
             return StockFilter::class;
         }
 

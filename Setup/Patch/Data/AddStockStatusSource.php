@@ -10,15 +10,22 @@ declare(strict_types=1);
 
 namespace Amadeco\ElasticsuiteStock\Setup\Patch\Data;
 
-use Magento\Framework\Setup\Patch\DataPatchInterface;
-use Magento\Framework\Setup\ModuleDataSetupInterface;
+use Amadeco\ElasticsuiteStock\Api\Data\StockInterface;
+use Amadeco\ElasticsuiteStock\Model\Product\Attribute\Source\Stock as StockSource;
+use Magento\Catalog\Api\Data\ProductAttributeInterface;
+use Magento\Eav\Setup\EavSetup;
 use Magento\Eav\Setup\EavSetupFactory;
-use Amadeco\ElasticsuiteStock\Setup\StockSetup;
+use Magento\Framework\Setup\ModuleDataSetupInterface;
+use Magento\Framework\Setup\Patch\DataPatchInterface;
 
 /**
- * Patch to create stock_status attribute
+ * Attach the source model to the existing stock_status attribute.
+ *
+ * Existing installs created the attribute without a source_model. Setting it
+ * lets getSource()->getOptionText() resolve the indexed int (0/1) to a label,
+ * so the layered-navigation filter no longer needs to hardcode the strings.
  */
-class CreateStockStatusAttribute implements DataPatchInterface
+class AddStockStatusSource implements DataPatchInterface
 {
     /**
      * @var ModuleDataSetupInterface
@@ -31,29 +38,21 @@ class CreateStockStatusAttribute implements DataPatchInterface
     private EavSetupFactory $eavSetupFactory;
 
     /**
-     * @var StockSetup
-     */
-    private StockSetup $stockSetup;
-
-    /**
-     * Constructor
+     * Constructor.
      *
      * @param ModuleDataSetupInterface $moduleDataSetup Module data setup.
      * @param EavSetupFactory          $eavSetupFactory EAV setup factory.
-     * @param StockSetup               $stockSetup      Stock setup.
      */
     public function __construct(
         ModuleDataSetupInterface $moduleDataSetup,
-        EavSetupFactory $eavSetupFactory,
-        StockSetup $stockSetup
+        EavSetupFactory $eavSetupFactory
     ) {
         $this->moduleDataSetup = $moduleDataSetup;
         $this->eavSetupFactory = $eavSetupFactory;
-        $this->stockSetup = $stockSetup;
     }
 
     /**
-     * Apply patch
+     * Apply patch.
      *
      * @return void
      */
@@ -61,14 +60,24 @@ class CreateStockStatusAttribute implements DataPatchInterface
     {
         $this->moduleDataSetup->startSetup();
 
+        /** @var EavSetup $eavSetup */
         $eavSetup = $this->eavSetupFactory->create(['setup' => $this->moduleDataSetup]);
-        $this->stockSetup->createStockStatusAttribute($eavSetup);
+        $entity = ProductAttributeInterface::ENTITY_TYPE_CODE;
+
+        if ($eavSetup->getAttributeId($entity, StockInterface::ATTRIBUTE_CODE) !== false) {
+            $eavSetup->updateAttribute(
+                $entity,
+                StockInterface::ATTRIBUTE_CODE,
+                'source_model',
+                StockSource::class
+            );
+        }
 
         $this->moduleDataSetup->endSetup();
     }
 
     /**
-     * Get aliases
+     * Get aliases.
      *
      * @return array
      */
@@ -78,12 +87,14 @@ class CreateStockStatusAttribute implements DataPatchInterface
     }
 
     /**
-     * Get dependencies
+     * Get dependencies.
      *
      * @return array
      */
     public static function getDependencies(): array
     {
-        return [];
+        return [
+            CreateStockStatusAttribute::class
+        ];
     }
 }
